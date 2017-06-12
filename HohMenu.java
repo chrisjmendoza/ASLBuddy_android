@@ -18,8 +18,28 @@ public class HohMenu extends Activity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(HohMenu.this, PhysicalRequestForm.class);
-                startActivity(i);
+                HohMenu.this.startActivity(i);
             }
         });
+
+        Button skypeButton = (Button) findViewById(R.id.skypeCall);
+        skypeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(HohMenu.this, SkypeCall.class);
+                HohMenu.this.startActivity(i);
+            }
+        });
+
+        Button chatButton = (Button) findViewById(R.id.chatTool);
+        chatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(HohMenu.this, HearingTool.class);
+                i.putExtra("userId", 1);
+                HohMenu.this.startActivity(i);
+            }
+        });
+
     }
 }

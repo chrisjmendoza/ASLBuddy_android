@@ -306,7 +306,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    public class UserLoginTask extends AsyncTask<Void, Void, String> {
+    private class UserLoginTask extends AsyncTask<Void, Void, String> {
 
         final String SERVER_BASE_URL = "https://softdev.xyz/aslbuddy/php/login/login.php?";
         final String USEREMAIL_PARAM = "email";
@@ -330,7 +330,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     .appendQueryParameter(PASSWORD_PARAM, mPassword)
                     .build();
             System.out.println(builtUri.toString());
-            URL url = null;
+            URL url;
             try {
                 url = new URL(builtUri.toString());
 
@@ -380,6 +380,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             boolean success = false;
             String email = "";
             int userType = 0;
+            int userId = 0;
 
             try {
                 JSONObject jObject = new JSONObject(result);
@@ -387,12 +388,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 if (success) {
                     email = jObject.getString("email");
                     userType = jObject.getInt("isInterpreter");
+                    userId = jObject.getInt("userId");
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
             if (success) {
+                Intent i;
                 sharedpreferences = getSharedPreferences(MyPREFERENCES, Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedpreferences.edit();
                 editor.putString(mEmail, email);
@@ -401,16 +404,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 if(userType == 1) {
 
-                    Intent i = new Intent(LoginActivity.this, InterpreterMenu.class);
-                    startActivity(i);
+                    i = new Intent(LoginActivity.this, InterpreterMenu.class);
 
                 } else {
 
-                    Intent i = new Intent(LoginActivity.this, HohMenu.class);
-                    startActivity(i);
+                    i = new Intent(LoginActivity.this, HohMenu.class);
+                    i.putExtra("userEmail", email);
 
                 }
-//
+
+                i.putExtra("userId", userId);
+                LoginActivity.this.startActivity(i);
+
             } else {
 
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

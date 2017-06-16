@@ -3,8 +3,6 @@ package xyz.softdev.aslbuddy;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -27,25 +25,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Author: Kellan Nealy
- * Created 10/10/2016
- *
- * This activity will be built from the conversate project:
- * https://github.com/chrisjmendoza/Conversate
- */
+public class ChatTool extends AppCompatActivity implements TextToSpeech.OnInitListener {
 
-public class HearingTool extends AppCompatActivity implements TextToSpeech.OnInitListener {
-
-    // Logged in userId
+    //Logged in userId
     private int userId;
 
     // layout reference
     private LinearLayout layout;
 
     // button references
-    private FloatingActionButton recordButton;
-    private Button typeButton;
+    private FloatingActionButton textSpeechButton;
+    private Button typingButton;
 
     // EditText reference for composing message
     private EditText textMessage;
@@ -69,135 +59,44 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_hearing_tool);
+        setContentView(R.layout.activity_chat_tool);
         createScrollView();
-        userId = getIntent().getIntExtra("userId", userId);
 
-        // instantiate text to speech
+        // instantiate text-to-speech
         Intent checkTTSIntent = new Intent();
         checkTTSIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
         startActivityForResult(checkTTSIntent, MY_TTS_DATA_CHECK_CODE);
 
-        // handle the buttons
-        recordButton = (FloatingActionButton) findViewById(R.id.voiceButton);
-        recordButton.setOnClickListener(new View.OnClickListener() {
+        //handle the buttons
+        textSpeechButton = (FloatingActionButton) findViewById(R.id.textSpeechButton);
+        textSpeechButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 promptSpeechInput();
             }
         });
-        typeButton = (Button) findViewById(R.id.type_button);
-        typeButton.setOnClickListener(onTypeClick());
 
-        // instantiate the sent messages lists
+        typingButton = (Button) findViewById(R.id.typing_button);
+        typingButton.setOnClickListener(onTypeClick());
+
+        // instantiate the sent messages list
         sentMessages = new ArrayList<>();
-        if (sentStringMessages == null) {
-            sentStringMessages = new ArrayList<String>();
-        } else {
-            // if messages loaded from saved instance state
-            boolean isOther = false;
-            for (int i = 0; i < sentStringMessages.size(); i++) {
-                final TextView curMessage = createNewTextView(sentStringMessages.get(i), isOther);
-                layout.addView(curMessage);
-                curMessage.startAnimation(AnimationUtils.loadAnimation(HearingTool.this,
-                        android.R.anim.slide_in_left));
-                isOther = !isOther;
-            }
+        if(sentMessages == null) {
+            sentStringMessages = new ArrayList<>();
         }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        savedInstanceState.putInt("userId", userId);
-        savedInstanceState.putStringArrayList("messages", sentStringMessages);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        userId = savedInstanceState.getInt("userId");
-        sentStringMessages = savedInstanceState.getStringArrayList("messages");
-    }
-
-    @Override
-    public void onBackPressed() {
-        finish();
-        Intent navigationIntent = new Intent(HearingTool.this, HohMenu.class);
-        HearingTool.this.startActivity(navigationIntent);
-    }
-
-    /**
-     * Install Text to Speech data when the application initializes.
-     * Checks to see if Text to speech is available on this device.
-     * */
-    public void onInit(int initStatus) {
-        if (initStatus == TextToSpeech.SUCCESS &&
-                ASLBuddyTTS.isLanguageAvailable(Locale.US) == TextToSpeech.LANG_AVAILABLE) {
-            ASLBuddyTTS.setLanguage(Locale.US);
-
-        } else if (initStatus == TextToSpeech.ERROR) {
-            Toast.makeText(this, "Your Device does not support Text to Speech",
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Show google speech input dialog, handler for the record button
-     * */
-    private void promptSpeechInput() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Talk!");
-
-        try {
-            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
-        } catch (ActivityNotFoundException a) {
-            Toast.makeText(getApplicationContext(),
-                    "Speech to Text is not supported on your device!",
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    /**
-     * Handles the activity results for Speech to Text and Text to Speech
-     * */
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == MY_TTS_DATA_CHECK_CODE) {
-            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
-                //the device has the necessary data - create the TTS
-                ASLBuddyTTS = new TextToSpeech(this, this);
-            }
-            else {
-                //no data - install it now
-                Intent installTTSIntent = new Intent();
-                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installTTSIntent);
-            }
-        } else
-        if (requestCode == REQ_CODE_SPEECH_INPUT && resultCode == RESULT_OK && data != null) {
-
-            ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            String message = text.get(0);
-
-            final TextView userMessage = createNewTextView(message, true);
-            layout.addView(userMessage);
-            userMessage.startAnimation(AnimationUtils.loadAnimation(HearingTool.this,
-                    android.R.anim.slide_in_left));
-
-            // update global variable to keeep track of whose talking
-            currentMessage = message;
-            isTryingToGetResponse = true;
-
-            // print for debugging the current message
-            System.out.println("Current message: " + currentMessage);
-        }
+//            // if messages loaded from saved instance state
+//            boolean isOther = false;
+//            for (int i = 0; i < sentStringMessages.size(); i++) {
+//                final TextView curMessage = createNewTextView(sentStringMessages.get(i), isOther);
+//                layout.addView(curMessage);
+//                curMessage.startAnimation(AnimationUtils.loadAnimation(ChatTool.this,
+//                        android.R.anim.slide_in_left));
+//                isOther = !isOther;
+//            }
+//        }
+//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+//        setSupportActionBar(toolbar);
     }
 
     /**
@@ -210,11 +109,11 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
             public void onClick(View v) {
 
                 // depending on the button text, we have different behavior
-                String buttonText = typeButton.getText().toString();
+                String buttonText = typingButton.getText().toString();
                 if (buttonText.equals("Type")) {
                     layout.addView(createNewEditText());
-                    recordButton.setVisibility(View.INVISIBLE);
-                    typeButton.setText("Send");
+                    textSpeechButton.setVisibility(View.INVISIBLE);
+                    typingButton.setText("Send");
 
                 } else if (buttonText.equals("Send")) {
                     // get rid of the keyboard
@@ -226,11 +125,11 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
 
                     final TextView userMessage = createNewTextView(message, false);
                     layout.addView(userMessage);
-                    userMessage.startAnimation(AnimationUtils.loadAnimation(HearingTool.this,
+                    userMessage.startAnimation(AnimationUtils.loadAnimation(ChatTool.this,
                             android.R.anim.slide_in_left));
 
-                    recordButton.setVisibility(View.VISIBLE);
-                    typeButton.setText("Type");
+                    textSpeechButton.setVisibility(View.VISIBLE);
+                    typingButton.setText("Type");
 
                     // remove the edit view when the user sends a message
                     layout.removeView(textMessage);
@@ -288,8 +187,8 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
         TextView sentMessage = new TextView(this);
         params = getTextViewParams(isOtherPerson, false);
         sentMessage.setLayoutParams(params);
-        sentMessage.setTextColor(getResources().getColor(R.color.hearing_tool_text));
-        sentMessage.setBackgroundColor(getResources().getColor(R.color.hearing_tool_messageBackground));
+        sentMessage.setTextColor(ContextCompat.getColor(this, R.color.hearing_tool_text));
+        sentMessage.setBackgroundColor(ContextCompat.getColor(this, R.color.hearing_tool_messageBackground));
         sentMessage.setPadding(10, 10, 10, 10);
 
         // set the correct message label
@@ -321,16 +220,67 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
         }
 
         if (isEditText) {
-            params.width = layout.getWidth() - typeButton.getWidth() - 10;
+            params.width = layout.getWidth() - typingButton.getWidth() - 10;
             params.gravity = Gravity.BOTTOM;
         }
         return params;
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        ASLBuddyTTS.shutdown();
+
+    /**
+     * Show google speech input dialog, handler for the record button
+     * */
+    private void promptSpeechInput() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Talk!");
+
+        try {
+            startActivityForResult(intent, REQ_CODE_SPEECH_INPUT);
+        } catch (ActivityNotFoundException a) {
+            Toast.makeText(getApplicationContext(),
+                    "Speech to Text is not supported on your device!",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * Handles the activity results for Speech to Text and Text to Speech
+     * */
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MY_TTS_DATA_CHECK_CODE) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                //the device has the necessary data - create the TTS
+                ASLBuddyTTS = new TextToSpeech(this, this);
+            }
+            else {
+                //no data - install it now
+                Intent installTTSIntent = new Intent();
+                installTTSIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installTTSIntent);
+            }
+        } else
+        if (requestCode == REQ_CODE_SPEECH_INPUT && resultCode == RESULT_OK && data != null) {
+
+            ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String message = text.get(0);
+
+            final TextView userMessage = createNewTextView(message, true);
+            layout.addView(userMessage);
+            userMessage.startAnimation(AnimationUtils.loadAnimation(ChatTool.this,
+                    android.R.anim.slide_in_left));
+
+            // update global variable to keeep track of whose talking
+            currentMessage = message;
+            isTryingToGetResponse = true;
+
+            // print for debugging the current message
+            System.out.println("Current message: " + currentMessage);
+        }
     }
 
     /**
@@ -338,7 +288,7 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
      * and adds it to the existing RelativeLayout from "content_voice_chat.xml"
      */
     private void createScrollView() {
-        RelativeLayout rl = (RelativeLayout) findViewById(R.id.chat_layout);
+        RelativeLayout rl = (RelativeLayout) findViewById(R.id.chat_tool_layout);
         ScrollView sv = new ScrollView(this);
         sv.setLayoutParams(new ScrollView.LayoutParams(ScrollView.LayoutParams.MATCH_PARENT,
                 ScrollView.LayoutParams.MATCH_PARENT));
@@ -351,12 +301,17 @@ public class HearingTool extends AppCompatActivity implements TextToSpeech.OnIni
     }
 
     /**
-     * Returns whether or not this android app can connect to the internet
-     * @return isOnline
-     */
-    public boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnected();
+     * Install Text to Speech data when the application initializes.
+     * Checks to see if Text to speech is available on this device.
+     * */
+    public void onInit(int initStatus) {
+        if (initStatus == TextToSpeech.SUCCESS &&
+                ASLBuddyTTS.isLanguageAvailable(Locale.US) == TextToSpeech.LANG_AVAILABLE) {
+            ASLBuddyTTS.setLanguage(Locale.US);
+
+        } else if (initStatus == TextToSpeech.ERROR) {
+            Toast.makeText(this, "Your Device does not support Text to Speech",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 }

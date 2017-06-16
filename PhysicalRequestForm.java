@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,7 +34,6 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -163,6 +161,12 @@ public class PhysicalRequestForm extends AppCompatActivity {
             zipForm.setError("This field is required.");
             focusView = zipForm;
             cancel = true;
+        } else {
+            if(!checkZip(zip)) {
+                zipForm.setError("Please enter a valid zip code");
+                focusView = zipForm;
+                cancel = true;
+            }
         }
 
         if (TextUtils.isEmpty(phone)) {
@@ -184,13 +188,9 @@ public class PhysicalRequestForm extends AppCompatActivity {
 
         String date = mDateDisplay.getText().toString();
         String time = mTimeDisplay.getText().toString();
-        String timeDate = date + " " + time;
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        Date inputDate = fmt.parse(timeDate);
-
-        // Create the MySQL datetime string
-        fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String dateString = fmt.format(inputDate);
+        String timeDate = date + " " + time + ":00";
+//        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        String dateTime = fmt.format(timeDate);
 
         try {
             json = new JSONObject();
@@ -201,7 +201,7 @@ public class PhysicalRequestForm extends AppCompatActivity {
             json.put("state", state);
             json.put("zip", zip);
             json.put("phone", phone);
-            json.put("timeDate", dateString);
+            json.put("dateTime", timeDate);
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -219,7 +219,7 @@ public class PhysicalRequestForm extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... params) {
 
-            BufferedReader reader = null;
+            BufferedReader reader;
 
             try {
                 // Set up connection and accompanying parameters
@@ -260,15 +260,25 @@ public class PhysicalRequestForm extends AppCompatActivity {
         }
 
         protected void onPostExecute(String result) {
-            nameForm.setText(result);
-            Toast.makeText(getApplicationContext(), "Data Sent", Toast.LENGTH_LONG).show();
+            result = result.replace("\n", "").replace("\r", "");
+            if(result.equals("Successful")) {
+                Toast.makeText(getApplicationContext(), "Request Sent", Toast.LENGTH_LONG).show();
+                Intent i = new Intent(PhysicalRequestForm.this, HohMenu.class);
+                i.putExtra("userId", userId);
+                PhysicalRequestForm.this.startActivity(i);
+            } else {
+                Toast.makeText(getApplicationContext(), "Error. Please check your input. ", Toast.LENGTH_LONG).show();
+            }
         }
-
     }
 
-
+    /**
+     * Zip code Regex validator. Allows for 5 digit zip or 9 digit zip code
+     * @param zip The zip code to validate
+     * @return Zip code passes regex check
+     */
     private boolean checkZip(String zip) {
-        String regex = "^[0-9]{5}$";
+        String regex = "^[0-9]{5}(?:-[0-9]{4})?$";
         Pattern pattern = Pattern.compile(regex);
 
         Matcher matcher = pattern.matcher(zip);

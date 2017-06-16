@@ -9,14 +9,16 @@ import android.net.Uri;
 /**
  * Skype resources including three methods: check if Skype is installed,
  * go to market to install skpye, and initiate a Skype video call to a specific username.
- *
+ * <p>
  * These public methods will be called from within other activities in the app in order to perform
  * these functions as necessary.
- *
+ * <p>
  * Added 11/2/16 by James Orrell
  */
 
 public class SkypeResources {
+
+    String skypeName;
 
     /*
     Call this method to determine if Skype is installed on the client device.
@@ -26,8 +28,7 @@ public class SkypeResources {
         PackageManager myPackageMgr = myContext.getPackageManager();
         try {
             myPackageMgr.getPackageInfo("com.skype.raider", PackageManager.GET_ACTIVITIES);
-        }
-        catch (PackageManager.NameNotFoundException e) {
+        } catch (PackageManager.NameNotFoundException e) {
             return (false);
         }
         return (true);
@@ -65,19 +66,6 @@ public class SkypeResources {
         // presence of its handler (although there is an extremely minute window where that
         // handler can go away).
         myContext.startActivity(myIntent);
-    }
-
-    /**
-     * //TODO: connect this function with server api to get username
-     * Placeholder method should get username from the server once an interpreter has accepted the
-     * request, and this function can be used to pass the username to the SkypeURI for placing
-     * the call.
-     * @return String username,  the valid Skype name of the interpreter
-     */
-    public static String getUsernameFromServer()
-    {
-        String username = "username";
-        return username;
     }
 
 }

@@ -8,10 +8,14 @@ import android.widget.Button;
 
 public class HohMenu extends Activity {
 
+    int userId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hoh_menu);
+
+        userId = getIntent().getIntExtra("userId", userId);
 
         Button physReq = (Button)findViewById(R.id.physReq);
         physReq.setOnClickListener(new View.OnClickListener() {
@@ -35,8 +39,8 @@ public class HohMenu extends Activity {
         chatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(HohMenu.this, HearingTool.class);
-                i.putExtra("userId", 1);
+                Intent i = new Intent(HohMenu.this, ChatTool.class);
+                i.putExtra("userId", userId);
                 HohMenu.this.startActivity(i);
             }
         });

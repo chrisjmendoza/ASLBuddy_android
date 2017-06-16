@@ -53,19 +53,16 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
-    SharedPreferences sharedpreferences;
-    public static final String MyPREFERENCES = "MyPrefs" ;
-
+    public static final String MyPREFERENCES = "MyPrefs";
     public static final Pattern EMAIL_ADDRESS_PATTERN = Pattern.compile(
             "[a-zA-Z0-9\\+\\.\\%\\-\\+]{1,256}" + "\\@" + "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
                     "(" + "\\." + "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" + ")+"
     );
-
     /**
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
-
+    SharedPreferences sharedpreferences;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
@@ -208,7 +205,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
+        //TODO: Change requirements for password
         return password.length() >= 4;
     }
 
@@ -329,7 +326,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     .appendQueryParameter(USEREMAIL_PARAM, mEmail)
                     .appendQueryParameter(PASSWORD_PARAM, mPassword)
                     .build();
-            System.out.println(builtUri.toString());
+
             URL url;
             try {
                 url = new URL(builtUri.toString());
@@ -343,7 +340,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 reader = new BufferedReader(new InputStreamReader(stream));
 
                 StringBuffer buffer = new StringBuffer();
-                String line = "";
+                String line;
 
                 while ((line = reader.readLine()) != null) {
                     buffer.append(line + "\n");
@@ -386,9 +383,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 JSONObject jObject = new JSONObject(result);
                 success = jObject.getBoolean("loginsuccess");
                 if (success) {
+                    userId = jObject.getInt("userId");
                     email = jObject.getString("email");
                     userType = jObject.getInt("isInterpreter");
-                    userId = jObject.getInt("userId");
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -402,7 +399,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 editor.putInt("isInterpreter", userType);
                 editor.commit();
 
-                if(userType == 1) {
+                if (userType == 1) {
 
                     i = new Intent(LoginActivity.this, InterpreterMenu.class);
 

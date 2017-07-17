@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,17 +43,27 @@ public class SkypeCall extends Activity {
 
         setupVideoRequest();
 
-        Button callButton = (Button) findViewById(R.id.label_finish_request);
+        Button callButton = (Button) findViewById(R.id.callButton);
         callButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!(interpreterFound.getText().equals("Finding Interpreter"))) {
-                    String interpreter = interpreterFound.getText().toString();
+                    String interpreter = "echo123";
+                    SkypeResources.initiateSkypeCall(getApplicationContext(), interpreter);
+                    // String interpreter = interpreterFound.getText().toString();
                     //initiate a call by grabbing the username from the TextView after it is updated
                     //this should only be available once the AsyncTask has completed and made the button visible
-                    SkypeResources.initiateSkypeCall(getApplicationContext(), interpreter);
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please select another Interpreter", Toast.LENGTH_LONG).show();
+                    // SkypeResources.initiateSkypeCall(getApplicationContext(), interpreter);
+
+//                    try {
+//                        SkypeApi skypeApi = new SkypeApi(getApplicationContext());
+//
+//                        skypeApi.startConversation("echo123", Modality.AudioCall);
+//                    } catch (SkypeSdkException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    Toast.makeText(getApplicationContext(), "Please select another Interpreter", Toast.LENGTH_LONG).show();
                 }
             }
         });

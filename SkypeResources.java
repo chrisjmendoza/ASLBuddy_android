@@ -6,46 +6,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-/**
- * Skype resources including three methods: check if Skype is installed,
- * go to market to install skpye, and initiate a Skype video call to a specific username.
- * <p>
- * These public methods will be called from within other activities in the app in order to perform
- * these functions as necessary.
- * <p>
- * Added 11/2/16 by James Orrell
- */
-
 public class SkypeResources {
 
     String skypeName;
-
-    /*
-    Call this method to determine if Skype is installed on the client device.
-    Return True if installed
-     */
-    public static boolean isSkypeClientInstalled(Context myContext) {
-        PackageManager myPackageMgr = myContext.getPackageManager();
-        try {
-            myPackageMgr.getPackageInfo("com.skype.raider", PackageManager.GET_ACTIVITIES);
-        } catch (PackageManager.NameNotFoundException e) {
-            return (false);
-        }
-        return (true);
-    }
-
-
-    /*
-    This method will automatically redirect the user to the Skype page on the google play store
-   to install client through market uri scheme
-
-    */
-    public static void goToMarket(Context myContext) {
-        Uri marketUri = Uri.parse("market://details?id=com.skype.raider");
-        Intent myIntent = new Intent(Intent.ACTION_VIEW, marketUri);
-        myIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        myContext.startActivity(myIntent);
-    }
 
     /**
      * initiate a Skype URI request which will attempt to switch focus to the Skype application and
@@ -66,6 +29,58 @@ public class SkypeResources {
         // presence of its handler (although there is an extremely minute window where that
         // handler can go away).
         myContext.startActivity(myIntent);
+    }
+
+    /**
+     * Install the Skype client through the market: URI scheme.
+     */
+    public void goToMarket(Context myContext) {
+        Uri marketUri = Uri.parse("market://details?id=com.skype.raider");
+        Intent myIntent = new Intent(Intent.ACTION_VIEW, marketUri);
+        myIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        myContext.startActivity(myIntent);
+
+        return;
+    }
+
+    /**
+     * Initiate the actions encoded in the specified URI.
+     */
+    public void initiateSkypeUri(Context myContext, String mySkypeUri) {
+
+        // Make sure the Skype for Android client is installed.
+        if (!isSkypeClientInstalled(myContext)) {
+            goToMarket(myContext);
+            return;
+        }
+
+        // Create the Intent from our Skype URI.
+        Uri skypeUri = Uri.parse(mySkypeUri);
+        Intent myIntent = new Intent(Intent.ACTION_VIEW, skypeUri);
+
+        // Restrict the Intent to being handled by the Skype for Android client only.
+        myIntent.setComponent(new ComponentName("com.skype.raider", "com.skype.raider.Main"));
+        myIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // Initiate the Intent. It should never fail because you've already established the
+        // presence of its handler (although there is an extremely minute window where that
+        // handler can go away).
+        myContext.startActivity(myIntent);
+
+        return;
+    }
+
+    /**
+     * Determine whether the Skype for Android client is installed on this device.
+     */
+    public boolean isSkypeClientInstalled(Context myContext) {
+        PackageManager myPackageMgr = myContext.getPackageManager();
+        try {
+            myPackageMgr.getPackageInfo("com.skype.raider", PackageManager.GET_ACTIVITIES);
+        } catch (PackageManager.NameNotFoundException e) {
+            return (false);
+        }
+        return (true);
     }
 
 }
